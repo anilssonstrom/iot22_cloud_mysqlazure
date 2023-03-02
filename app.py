@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'mysupersecretkey'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:examplepass@localhost/flaskcodeloop'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:example@localhost/flaskcodeloop'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -33,7 +33,7 @@ def init():
     """Create the database"""
     from sqlalchemy import create_engine, text
 
-    with create_engine('mysql://root:examplepass@localhost').connect() as conn:
+    with create_engine('mysql://root:example@localhost').connect() as conn:
         conn.execute(text("CREATE DATABASE IF NOT EXISTS flaskcodeloop"))
         conn.execute(text("commit"))
 
