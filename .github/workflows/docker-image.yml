@@ -68,7 +68,7 @@ jobs:
 
       - name: Deploy the app
         run: |
-          docker-compose --context acictx up -f "$GITHUB_WORKSPACE/docker-compose.yml"
+          docker-compose --context acictx -f "$GITHUB_WORKSPACE/docker-compose.yml" up 
 
 #      - name: 'Deploy to Azure'
 #        uses: Azure/aci-deploy@v1
