@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    image: docker.io/anilssonstrom/flaskdbtest
+    ports:
+      - 80:80
+
+  db:
+    image: docker.io/mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - 3306:3306

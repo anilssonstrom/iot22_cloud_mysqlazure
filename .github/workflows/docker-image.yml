@@ -1,0 +1,81 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Compose build
+        run: docker compose build
+      -
+        name: Compose push
+        run: docker compose push
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@master
+
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Docker Compose CLI
+        run: >
+          curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
+
+      - name: Docker Login to Azure
+        run: |
+          CLIENT_ID=$(echo '${{ secrets.CI_AZURE_CREDENTIALS }}' | jq --raw-output .clientId)
+          CLIENT_SECRET=$(echo '${{ secrets.CI_AZURE_CREDENTIALS }}' | jq --raw-output .clientSecret)
+          TENANT_ID=$(az account show --query homeTenantId --output tsv)
+          docker login azure --client-id "$CLIENT_ID" --client-secret "$CLIENT_SECRET" --tenant-id "$TENANT_ID"
+
+      - name: Create ACI context
+        run: |
+          SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+          docker context create aci acictx --resource-group "flasktest" --location "north europe" --subscription-id "$SUBSCRIPTION_ID"
+
+      - name: Deploy the app
+        run: |
+          docker compose --context acictx up -f "$GITHUB_WORKSPACE/docker-compose.yml"
+          
+#      - name: 'Deploy to Azure'
+#        uses: Azure/aci-deploy@v1
+#        with:
+#          resource-group: flasktest
+#          dns-name-label: flaskactiondemo
+#          image: docker.io/anilssonstrom/actionsdemo
+#          name: flask-actionsdemo
+#          location: 'north europe'
+
+
+#      -
+#        name: Build and push
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: .
+#          file: ./Dockerfile
+#          push: true
+#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/actionsdemo:latest

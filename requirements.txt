@@ -1,0 +1,6 @@
+Flask~=2.2.3
+flask_wtf
+flask_sqlalchemy
+python-dotenv
+sqlalchemy
+WTForms~=3.0.1
